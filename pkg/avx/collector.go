@@ -170,6 +170,7 @@ func (c *collector) Describe(ch chan<- *prometheus.Desc) {
 func (c collector) Collect(ch chan<- prometheus.Metric) {
 	var wg sync.WaitGroup
 
+	log.Info("colleting AVX metrics")
 	wg.Add(1)
 	go func() {
 		defer wg.Done()

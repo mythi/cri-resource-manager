@@ -21,12 +21,15 @@ import (
 
 	"contrib.go.opencensus.io/exporter/jaeger"
 	"contrib.go.opencensus.io/exporter/prometheus"
+	_ "github.com/intel/cri-resource-manager/pkg/metrics/register"
+	prom "github.com/prometheus/client_golang/prometheus"
 	"go.opencensus.io/plugin/ocgrpc"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/trace"
 	"google.golang.org/grpc"
 
 	logger "github.com/intel/cri-resource-manager/pkg/log"
+	metrics "github.com/intel/cri-resource-manager/pkg/metrics"
 )
 
 const (
@@ -82,8 +85,21 @@ func Setup() error {
 		return traceError("failed to register default gRPC server views: %v", err)
 	}
 
+	reg := prom.NewRegistry()
+
+	// TODO: change to prom.GathererFunc() where func() returns cached []*MetricFamilies from events loop
+	m, err := metrics.NewMetricGatherer()
+	if err != nil {
+		log.Error("metrics: %v", err)
+
+	}
+
+	gs := prom.Gatherers{m, reg}
+
 	popt := prometheus.Options{
 		Namespace: prometheusNamespace(Service),
+		Registry:  reg,
+		Gatherer:  gs,
 		OnError:   func(err error) { log.Error("prometheus: %v", err) },
 	}
 	pe, err := prometheus.NewExporter(popt)
