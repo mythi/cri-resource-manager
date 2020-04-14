@@ -32,7 +32,8 @@ import (
 	"github.com/intel/cri-resource-manager/pkg/utils"
 
 	"github.com/intel/cri-resource-manager/pkg/instrumentation"
-	"go.opencensus.io/trace"
+	"go.opentelemetry.io/otel/api/key"
+	"go.opentelemetry.io/otel/api/trace"
 )
 
 // Options contains the configurable options of our CRI server.
@@ -256,8 +257,8 @@ func (s *server) intercept(ctx context.Context, req interface{},
 
 	dump.RequestMessage(kind, info.FullMethod, req, sync)
 
-	if span := trace.FromContext(ctx); span != nil {
-		span.AddAttributes(trace.StringAttribute("kind", kind))
+	if span := trace.SpanFromContext(ctx); span != nil {
+		span.SetAttributes(key.String("kind", kind))
 	}
 
 	start = time.Now()

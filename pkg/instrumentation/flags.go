@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"go.opencensus.io/trace"
+	"go.opentelemetry.io/otel/sdk/trace"
 
 	"github.com/intel/cri-resource-manager/pkg/config"
 	"github.com/intel/cri-resource-manager/pkg/utils"

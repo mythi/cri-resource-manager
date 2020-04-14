@@ -17,34 +17,38 @@ package instrumentation
 import (
 	"google.golang.org/grpc"
 
-	"go.opencensus.io/plugin/ocgrpc"
 	"go.opencensus.io/stats/view"
+	"go.opentelemetry.io/otel/plugin/grpctrace"
 )
 
 // InjectGrpcClientTrace injects gRPC dial options for instrumentation if necessary.
 func InjectGrpcClientTrace(opts ...grpc.DialOption) []grpc.DialOption {
-	extra := grpc.WithStatsHandler(&ocgrpc.ClientHandler{})
+	extra := []grpc.DialOption{
+		grpc.WithUnaryInterceptor(grpctrace.UnaryClientInterceptor(global.Tracer(""))),
+		grpc.WithStreamInterceptor(grpctrace.StreamClientInterceptor(global.Tracer(""))),
+	}
 
 	if len(opts) > 0 {
 		opts = append(opts, extra)
-	} else {
-		opts = []grpc.DialOption{extra}
+		return opts
 	}
 
-	return opts
+	return extra
 }
 
 // InjectGrpcServerTrace injects gRPC server options for instrumentation if necessary.
 func InjectGrpcServerTrace(opts ...grpc.ServerOption) []grpc.ServerOption {
-	extra := grpc.StatsHandler(&ocgrpc.ServerHandler{})
+	extra := []grpc.ServerOption{
+		grpc.UnaryInterceptor(grpctrace.UnaryServerInterceptor(global.Tracer(""))),
+		grpc.StreamInterceptor(grpctrace.StreamServerInterceptor(global.Tracer(""))),
+	}
 
 	if len(opts) > 0 {
 		opts = append(opts, extra)
-	} else {
-		opts = []grpc.ServerOption{extra}
+		return opts
 	}
 
-	return opts
+	return extra
 }
 
 // registerGrpcViews registers default client and server trace views for gRPC.

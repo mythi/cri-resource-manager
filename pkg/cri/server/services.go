@@ -17,7 +17,8 @@ package server
 import (
 	"context"
 
-	"go.opencensus.io/trace"
+	"go.opentelemetry.io/otel/api/key"
+	"go.opentelemetry.io/otel/api/trace"
 	"google.golang.org/grpc"
 
 	api "k8s.io/cri-api/pkg/apis/runtime/v1alpha2"
@@ -65,10 +66,10 @@ func fqmn(service, method string) string {
 func (s *server) interceptRequest(ctx context.Context, service, method string,
 	req interface{}, handler grpc.UnaryHandler) (interface{}, error) {
 
-	if span := trace.FromContext(ctx); span != nil {
-		span.AddAttributes(
-			trace.StringAttribute("service", service),
-			trace.StringAttribute("method", method))
+	if span := trace.SpanFromContext(ctx); span != nil {
+		span.SetAttributes(
+			key.String("service", service),
+			key.String("method", method))
 	}
 
 	return s.intercept(ctx, req,
